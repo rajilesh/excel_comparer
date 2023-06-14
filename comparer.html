@@ -59,9 +59,10 @@
           console.log("No differences found between the two files.");
         }
       }
-
+let output = document.querySelector('.output ul');
       function compareSheets(sheet1, sheet2) {
         var diff = {};
+        let out = '';
 
         for (var cell in sheet1) {
           if (sheet1.hasOwnProperty(cell)) {
@@ -71,6 +72,9 @@
                 value1: sheet1[cell]?.v,
                 value2: sheet2[cell]?.v
               };
+              out += '<li> '+cell+' ' + sheet1[cell]?.w+ ' >> '+sheet2[cell]?.w +'</li>';
+              console.log('asd',sheet1[cell],sheet2[cell])
+              
             }
             }
           }
@@ -79,6 +83,7 @@
         if (Object.keys(diff).length === 0) {
           return null;
         } else {
+          output.innerHTML = out;
           return diff;
         }
       }
@@ -102,5 +107,8 @@
   <h1>Excel File Comparison</h1>
   <input type="file" id="file1">
   <input type="file" id="file2">
+  <div class="output">
+    <ul></ul>
+  </div>
 </body>
 </html>
