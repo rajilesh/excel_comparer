@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Excel File Comparison</title>
+  <script src="exel.js"></script>
+  <script>
+    function compareExcelFiles(file1, file2) {
+      var reader = new FileReader();
+      var workbook1, workbook2;
+
+      reader.onload = function (e) {
+        var data = new Uint8Array(e.target.result);
+        workbook1 = XLSX.read(data, { type: 'array' });
+
+        // Process the second file after the first one is read
+        processSecondFile();
+      };
+      reader.readAsArrayBuffer(file1);
+
+      function processSecondFile() {
+        reader.onload = function (e) {
+          var data = new Uint8Array(e.target.result);
+          workbook2 = XLSX.read(data, { type: 'array' });
+
+          // Compare the two workbooks
+          compareWorkbooks(workbook1, workbook2);
+        };
+        reader.readAsArrayBuffer(file2);
+      }
+
+      function compareWorkbooks(workbook1, workbook2) {
+        if (workbook1.SheetNames.length !== workbook2.SheetNames.length) {
+          console.log("The number of sheets differs in the two files.");
+          return;
+        }
+
+        var differencesFound = false;
+
+        workbook1.SheetNames.forEach(function (sheetName) {
+          if (!workbook2.SheetNames.includes(sheetName)) {
+            console.log(`Sheet "${sheetName}" does not exist in the second file.`);
+            differencesFound = true;
+            return;
+          }
+
+          var worksheet1 = workbook1.Sheets[sheetName];
+          var worksheet2 = workbook2.Sheets[sheetName];
+
+          var sheetDiff = compareSheets(worksheet1, worksheet2);
+
+          if (sheetDiff) {
+            console.log(`Differences found in sheet "${sheetName}":`);
+            console.log(sheetDiff);
+            differencesFound = true;
+          }
+        });
+
+        if (!differencesFound) {
+          console.log("No differences found between the two files.");
+        }
+      }
+
+      function compareSheets(sheet1, sheet2) {
+        var diff = {};
+
+        for (var cell in sheet1) {
+          if (sheet1.hasOwnProperty(cell)) {
+            if (sheet1[cell]?.v !== sheet2[cell]?.v) {
+              if(sheet2[cell]?.v){
+              diff[cell] = {
+                value1: sheet1[cell]?.v,
+                value2: sheet2[cell]?.v
+              };
+            }
+            }
+          }
+        }
+
+        if (Object.keys(diff).length === 0) {
+          return null;
+        } else {
+          return diff;
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      var fileInput1 = document.getElementById('file1'); // Input element for the first file
+      var fileInput2 = document.getElementById('file2'); // Input element for the second file
+
+      fileInput1.addEventListener('change', function (e) {
+        var file1 = e.target.files[0];
+        fileInput2.addEventListener('change', function (e) {
+          var file2 = e.target.files[0];
+          compareExcelFiles(file1, file2);
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Excel File Comparison</h1>
+  <input type="file" id="file1">
+  <input type="file" id="file2">
+</body>
+</html>
